@@ -35,6 +35,7 @@
       typeaheadOverrides: null,
       typeaheadSource: null,
       AjaxPush: null,
+      data:{},
       AjaxPushAllTags: null,
       delimeters: [44, 188, 13, 9],
       backspace: [8],
@@ -254,10 +255,13 @@
 
     var pushAllTags = function (e, tagstring) {
       if (tagManagerOptions.AjaxPushAllTags) {
-        jQuery.post(tagManagerOptions.AjaxPushAllTags, { tags: tagstring });
+          postData = {}
+          jQuery.extend(postData, tagManagerOptions.data, {'operatorType':'+','name': tagstring});
+        jQuery.post(tagManagerOptions.AjaxPushAllTags, postData);
       }
     };
-
+    var internalPushTag = function(tag, objToPush, isValid){
+    }
     var pushTag = function (tag, objToPush, isValid) {
       if (!tag || (!isValid) || tag.length <= 0) return;
 
@@ -309,8 +313,10 @@
         tlis.push(tag);
         tlid.push(tagId);
 
-        if (tagManagerOptions.AjaxPush != null) {
-          jQuery.post(tagManagerOptions.AjaxPush, { tag: tag });
+        if(jQuery.isFunction(tagManagerOptions.AjaxPush)){
+            var postData = {};
+            jQuery.extend(postData, tagManagerOptions.data,{'operatorType': '+','name':tag});
+            tagManagerOptions.AjaxPush(postData);
         }
 
         // console.log("tagList: " + tlis);
@@ -576,24 +582,29 @@
           return false;
         });
       }
-
-      if (tagManagerOptions.prefilled != null) {
-        if (typeof (tagManagerOptions.prefilled) == "object") {
-          var pta = tagManagerOptions.prefilled;
-          jQuery.each(pta, function (key, val) {
-            var a = 1;
-            pushTag(val, obj, true);
-          });
-        } else if (typeof (tagManagerOptions.prefilled) == "string") {
-          var pta = tagManagerOptions.prefilled.split(',');
-
-          jQuery.each(pta, function (key, val) {
-            var a = 1;
-            pushTag(val, obj, true);
-          });
-
+    var initTags = function(){
+         var inputVal = obj.val();
+         if (!!inputVal || tagManagerOptions.prefilled != null) {
+            if (!!inputVal || typeof (tagManagerOptions.prefilled) == "string") {
+                var pta = '';
+                if(!!inputVal){
+                    pta = inputVal.split(',')    
+                }else{
+                    pta = tagManagerOptions.prefilled.split(',');
+                }
+                  jQuery.each(pta, function (key, val) {
+                    var a = 1;
+                    pushTag(val, obj, true);
+                  });
+            } else if (typeof (tagManagerOptions.prefilled) == "object") {
+                 var pta = tagManagerOptions.prefilled;
+                  jQuery.each(pta, function (key, val) {
+                    var a = 1;
+                    pushTag(val, obj, true);
+                  });
+            }
+          } 
         }
-      }
     });
 
   }
