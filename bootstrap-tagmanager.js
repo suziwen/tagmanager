@@ -210,14 +210,34 @@
 
       if (tlid.length > 0) {
         var tagId = tlid.pop();
+        _internalPopTag(tagId, _popTagSuccess);
+      }
+    };
+
+    var _internalPopTag = function(tagId, successCallback){
+        if (jQuery.isFunction(tagManagerOptions.AjaxPush)) {
+        var postData = {};
+        var tlis = obj.data('tlis');
+        var tlid = obj.data('tlid');
+        var p = jQuery.inArray(tagId, tlid);
+        var tag = tlis[p];
+        jQuery.extend(postData, tagManagerOptions.data, {
+          'operatorType': '-',
+          'name': tag
+        });
+        tagManagerOptions.AjaxPush(postData, function() {
+          successCallback(tagId);
+        });
+      } else {
+        successCallback(tagId);
+      }
+    }
+    var _popTagSuccess  = function(tagId){
         tlis.pop();
         // console.log("TagIdToRemove: " + tagId);
         jQuery("#" + objName + "_" + tagId).remove();
         refreshHiddenTagList();
-        // console.log(tlis);
-      }
-    };
-
+    }
     var empty = function() {
       var tlis = obj.data("tlis");
       var tlid = obj.data("tlid");
@@ -244,6 +264,10 @@
     };
 
     var spliceTag = function(tagId) {
+      _internalPopTag(tagId, spliceTagSuccess);
+    };
+
+    var spliceTagSuccess = function(tagId){
       var tlis = obj.data("tlis");
       var tlid = obj.data("tlid");
 
@@ -263,13 +287,11 @@
       if (tagManagerOptions.maxTags > 0 && tlis.length < tagManagerOptions.maxTags) {
         obj.show();
       }
-    };
-
+    }
     var pushAllTags = function(e, tagstring) {
       if (tagManagerOptions.AjaxPushAllTags) {
         postData = {}
         jQuery.extend(postData, tagManagerOptions.data, {
-          'operatorType': '+',
           'name': tagstring
         });
         jQuery.post(tagManagerOptions.AjaxPushAllTags, postData);
